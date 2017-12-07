@@ -42,5 +42,36 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-   // Put you code here:
+    //zero and negate x input?
+    Mux16(a=x[0..15], b=false, sel=zx, out=xZX);
+    Not16(in=xZX, out=xnot);
+    Mux16(a=xZX, b=xnot, sel=nx, out=outX);
+
+    //zero and negate y input?
+    Mux16(a=y[0..15], b=false, sel=zy, out=yZY);
+    Not16(in=yZY, out=ynot);
+    Mux16(a=yZY, b=ynot, sel=ny, out=outY);
+    
+    //x+y
+    Add16(a=outX, b=outY, out=xplusy);
+    //x&y bitwise
+    And16(a=outX, b=outY, out=xandy);
+
+    //which function?
+    Mux16(a=xandy, b=xplusy, sel=f, out=outF);
+    //negate output
+    Not16(in=outF, out=noutF);
+
+    //final output and sub buses for zr and ng
+    Mux16(a=outF, b=noutF, sel=no, out[0..7]=finalout1, out[8..15]=finalout2, out=out, out[15]=ngout);
+
+    //for zr
+    Or8Way(in=finalout1, out=zr1);
+    Or8Way(in=finalout2, out=zr2);
+    Or(a=zr1, b=zr2, out=zrtemp);
+    Not(in=zrtemp, out=zr);
+
+    //for ng
+    And(a=true, b=ngout, out=ng);
+
 }
